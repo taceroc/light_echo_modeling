@@ -28,32 +28,32 @@ def calculate_scattering_function(mu, sizeg, waveg, wave, Qcarb, gcarb):
 
     return ds, S
 
-
+path_to_LE = "path_to_LE"
 def main(mu, wave):
     # path_dustdata = '/content/drive/MyDrive/LE2023/dust/data/'
-    path_dustdata = r"C:\\Users\\tac19\\OneDrive\\Documents\\UDEL\\Project_RA\\LE\\Simulation\\code\\dust\\data"
+    path_dustdata = path_to_LE+r"/dust/data"
     # pull out available wavelengths for g values, convert to cm from um, and take the 
-    waveg = np.loadtxt(path_dustdata+r'\\dustmodels_WD01\\LD93_wave.dat', unpack=True) #micronm
+    waveg = np.loadtxt(path_dustdata+r'/dustmodels_WD01/LD93_wave.dat', unpack=True) #micronm
     # pull out available sizes for the g values, convert to cm from um, and take the log
-    sizeg = np.loadtxt(path_dustdata+r'\\dustmodels_WD01\\LD93_aeff.dat', unpack=True) #micron
+    sizeg = np.loadtxt(path_dustdata+r'/dustmodels_WD01/LD93_aeff.dat', unpack=True) #micron
 
     # older models used for g (degree of forward scattering) values
     # carbonaceous dust
-    carbonQ = path_dustdata+r'\\dustmodels_WD01\\Gra_81.dat'
+    carbonQ = path_dustdata+r'/dustmodels_WD01/Gra_81.dat'
     Qcarb_sca = np.loadtxt(carbonQ, usecols=(2), unpack=True)
     Qcarb_abs = np.loadtxt(carbonQ, usecols=(1), unpack=True)
     Qcarb = Qcarb_sca / (Qcarb_sca + Qcarb_abs)
 
     # silicate dust
-    siliconQ = path_dustdata+r'\\dustmodels_WD01\\suvSil_81.dat'
+    siliconQ = path_dustdata+r'/dustmodels_WD01/suvSil_81.dat'
     Qsil = np.loadtxt(siliconQ, usecols=(2), unpack=True)
 
     # older models used for g (degree of forward scattering) values
     # carbonaceous dust
-    carbong = path_dustdata+r'\\dustmodels_WD01\\Gra_81.dat'
+    carbong = path_dustdata+r'/dustmodels_WD01/Gra_81.dat'
     gcarb = np.loadtxt(carbong, usecols=(3), unpack=True)
     # silicate dust
-    silicong = path_dustdata+r'\\dustmodels_WD01\\suvSil_81.dat'
+    silicong = path_dustdata+r'/dustmodels_WD01/suvSil_81.dat'
     gsil = np.loadtxt(silicong, usecols=(3), unpack=True)
 
     ds, S = calculate_scattering_function(mu, sizeg, waveg, wave, Qcarb, gcarb)
