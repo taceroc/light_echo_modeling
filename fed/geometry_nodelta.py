@@ -9,7 +9,7 @@ from astropy.cosmology import FlatLambdaCDM
 
 import sys
 # sys.path.append('/content/drive/MyDrive/LE2023/dust/code')
-sys.path.append(r"code/dust/code")
+sys.path.append(r"path_to_LE/dust/code")
 
 import var_constants as vc
 import dust_constants as dc
@@ -18,7 +18,7 @@ import scattering_function as sf
 import size_dist as sd
 import calculate_scattering_function as csf
 
-sys.path.append(r"code")
+sys.path.append(r"path_to_LE")
 import surface_brightness as sb
 # import brightness as fb
 
