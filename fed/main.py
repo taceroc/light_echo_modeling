@@ -27,7 +27,7 @@ alpha = 15
 # # x = np.linspace(-10,10,1000)
 
 # for ct in [120, 130, 140, 160, 180, 200, 230, 250, 280, 290, 320, 360, 440, 520]: #alpha = 0 done
-for ct in [290, 320, 360, 440, 520]: #alpha = 0 done
+for ct in [290]: #alpha = 0 done
 # for al in [0, 15, 45, 75, 120, 310]:
     ctyi = ct * fc.dtoy
     a = np.tan(np.deg2rad(alpha))
@@ -54,7 +54,8 @@ for ct in [290, 320, 360, 440, 520]: #alpha = 0 done
 print("end %s"%(ct))
 
 
-for al in [0, 15, 45, 75, 120, 310]:
+# for al in [0, 15, 45, 75, 120, 310]:
+for al in [15]:
     a = np.tan(np.deg2rad(al))
     r_le2 = 2 * vc.z0ly * vc.ct + (vc.ct)**2 * (1 + a**2)
     r_le = np.sqrt(r_le2)
