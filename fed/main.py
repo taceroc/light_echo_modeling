@@ -16,7 +16,7 @@ import scattering_function as sf
 import size_dist as sd
 import calculate_scattering_function as csf
 
-sys.path.append(r"code")
+# sys.path.append(r"code")
 import surface_brightness as sb
 # import brightness as fb
 import geometry_nodelta as le_geo
