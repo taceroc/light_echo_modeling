@@ -7,7 +7,7 @@ from scipy.special import erf
 from scipy import integrate
 
 import sys
-sys.path.append(r"C:\\Users\\tac19\\OneDrive\\Documents\\UDEL\\Project_RA\\LE\\Simulation\\code\\dust\\code")
+sys.path.append(r"path_to_LE/dust/code")
 
 import var_constants as vc
 import dust_constants as dc
