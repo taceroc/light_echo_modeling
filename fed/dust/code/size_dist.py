@@ -6,8 +6,7 @@ from astropy import units as u
 from scipy.special import erf
 
 import sys
-sys.path.append(r"C:\\Users\\tac19\\OneDrive\\Documents\\UDEL\\Project_RA\\LE\\Simulation\\code\\dust\\code")
-
+sys.path.append(r"path_to_LE/dust/code")
 import var_constants as vc
 import dust_constants as dc
 import fix_constants as fc
