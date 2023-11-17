@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 import sys
-sys.path.append(r"code\dust\code")
+sys.path.append(r"code/dust/code")
 
 import var_constants as vc
 import dust_constants as dc
