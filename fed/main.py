@@ -22,7 +22,7 @@ import surface_brightness as sb
 import geometry_nodelta as le_geo
 import plot_nodelta as le_pl
 
-
+path_to_LE = "path_to_LE"
 alpha = 15
 # # x = np.linspace(-10,10,1000)
 
@@ -38,7 +38,7 @@ for ct in [290, 320, 360, 440, 520]: #alpha = 0 done
     xmax = r_le-a*ctyi
     x = np.linspace(xmin,xmax,1000)
     new_xs_v838, new_ys_v838, surface_v838, act_v838, ange_v838, cossigma_v838 = le_geo.LE_xy_surface_concate_plane(alpha, vc.z0ly, ctyi, x)
-    path_ge = r"path_to_LE/save_data/"
+    path_ge = r"%s/save_data/"%(path_to_LE)
     np.save(path_ge+r"plane_nd_xs_v838_t%s.npy"%(ct), new_xs_v838)
     np.save(path_ge+r"plane_nd_ys_v838_t%s.npy"%(ct), new_ys_v838)
     np.save(path_ge+r"plane_nd_flux_v838_t%s.npy"%(ct),surface_v838)  
@@ -48,7 +48,7 @@ for ct in [290, 320, 360, 440, 520]: #alpha = 0 done
     le_pl.plot(new_xs_v838, new_ys_v838, surface_v838, alpha, act_v838, axes, fig, save = False, name = "name")
     axes.set_title(r"V838 Mon - Plane: time$_{obs}$ = %s days"%(ct))
     # axes.set_title(r"V838 Mon - Plane: $\alpha$ = %s deg "%(al))
-    name = r"path_to_LE/figures/"+r"plane_nd_v838_t%s.pdf"%(ct)
+    name = path_to_LE+r"/figures/"+r"plane_nd_v838_t%s.pdf"%(ct)
     plt.savefig(name, dpi = 700)
     # plt.show()
 print("end %s"%(ct))
@@ -63,7 +63,7 @@ for al in [0, 15, 45, 75, 120, 310]:
     xmax = r_le-a*vc.ct
     x = np.linspace(xmin,xmax,1000)
     new_xs_v838, new_ys_v838, surface_v838, act_v838, ange_v838, cossigma_v838 = le_geo.LE_xy_surface_concate_plane(al, vc.z0ly, vc.ct, x)
-    path_ge = r"path_to_LE/save_data/"
+    path_ge = path_to_LE+r"/save_data/"
     np.save(path_ge+r"plane_nd_xs_v838_a%s.npy"%(al), new_xs_v838)
     np.save(path_ge+r"plane_nd_ys_v838_a%s.npy"%(al), new_ys_v838)
     np.save(path_ge+r"plane_nd_flux_v838_a%s.npy"%(al), surface_v838)
@@ -73,7 +73,7 @@ for al in [0, 15, 45, 75, 120, 310]:
     le_pl.plot(new_xs_v838, new_ys_v838, surface_v838, al, act_v838, axes, fig, save = False, name = "name")
     # axes.set_title(r"V838 Mon - Plane: time$_{obs}$ = %s days, $\alpha$ = %s deg,  z0 = %s pc"%(vc.Deltat, al, vc.z0))
     axes.set_title(r"V838 Mon - Plane: $\alpha$ = %s deg "%(al))
-    name = r"path_to_LE/figure/"+r"plane_nd_v838_a%s.pdf"%(al)
+    name = path_to_LE+r"/figure/"+r"plane_nd_v838_a%s.pdf"%(al)
     plt.savefig(name, dpi = 700)
     # plt.show()
 print("end %s"%(al))
