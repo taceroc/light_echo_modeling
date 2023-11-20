@@ -6,9 +6,12 @@ from astropy import units as u
 import astropy.cosmology.units as cu
 from astropy.cosmology import FlatLambdaCDM
 
+
 import sys
+from setpath import path_to_LE
 # sys.path.append('/content/drive/MyDrive/LE2023/dust/code')
-sys.path.append(r"path_to_LE/dust/code")
+sys.path.append(path_to_LE)
+sys.path.append(path_to_LE + r"/dust/code")
 import var_constants as vc
 import dust_constants as dc
 import fix_constants as fc
@@ -16,7 +19,6 @@ import scattering_function as sf
 import size_dist as sd
 import calculate_scattering_function as csf
 
-sys.path.append(r"path_to_LE")
 import surface_brightness as sb
 
 

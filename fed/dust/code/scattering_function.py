@@ -7,7 +7,8 @@ from scipy.special import erf
 from scipy import integrate
 
 import sys
-sys.path.append(r"path_to_LE/dust/code")
+from setpath import path_to_LE
+sys.path.append(path_to_LE + "/dust/code")
 import var_constants as vc
 import dust_constants as dc
 import fix_constants as fc
