@@ -116,3 +116,8 @@ def plot_sphere(new_xs, new_ys, surface, ax, fig, save = False, name = "name"):
         plt.savefig(name+".png", dpi = 700, bbox_inches='tight')
 
     return cb1, ax
+
+def plot_2d_array(arr_2d):
+
+    plt.imshow(arr_2d)
+    plt.show()

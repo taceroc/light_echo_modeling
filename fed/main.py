@@ -56,7 +56,8 @@ for ct in [290]: #alpha = 0 done
     xmin = -r_le-a*ctyi
     xmax = r_le-a*ctyi
     x = np.linspace(xmin, xmax,10)
-    new_xs_v838, new_ys_v838, surface_v838, act_v838, ange_v838, cossigma_v838 = le_geo.LE_xy_surface_concate_plane(alpha, vc.z0ly, ctyi, x)
+    new_xs_v838, new_ys_v838, surface_v838, act_v838, ange_v838, cossigma_v838 = le_geo.LE_xy_surface_concate_plane_fed(alpha, vc.z0ly, ctyi, x)
+
     path_ge = r"%s/save_data/"%(path_to_LE)
     np.save(path_ge+r"/plane_nd_xs_v838_t%s.npy"%(ct), new_xs_v838)
     np.save(path_ge+r"/plane_nd_ys_v838_t%s.npy"%(ct), new_ys_v838)
@@ -69,6 +70,10 @@ for ct in [290]: #alpha = 0 done
     # axes.set_title(r"V838 Mon - Plane: $\alpha$ = %s deg "%(al))
     name = path_to_LE+r"/figures/" + r"plane_nd_v838_t%s.pdf"%(ct)
     plt.savefig(name, dpi = 700)
+
+
+
+
     # plt.show()
 print("end %s"%(ct))
 

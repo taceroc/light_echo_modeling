@@ -3,6 +3,8 @@ import scipy as sp
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+from plot_nodelta import plot_2d_array
+
 from astropy import units as u
 import astropy.cosmology.units as cu
 from astropy.cosmology import FlatLambdaCDM
@@ -231,8 +233,8 @@ def final_xy_projected(phis, r_le_out, r_le_in, act):
     return new_xs, new_ys
 
 
-def final_xy_projected_in_array(phis, inner_radius, outer_radius,
-                                act, array_2d, new_xs, new_ys):
+def final_xy_projected_in_array(r_le_in_f, r_le_out_f, z_f,
+                             arr_2d, new_xs, new_ys, center=(0,0)):
 
     """
     Calculate the x,y points in arcseconds
@@ -242,42 +244,30 @@ def final_xy_projected_in_array(phis, inner_radius, outer_radius,
         phis: angle in the sky plane
         r_le_out, r_le_in: out and inner radii in arcsec
         act: center of LE in arcsec
-    
+
     Returns:
         new_xs, new_ys: x,y position in the x-y plane in arcseconds
     """
     # DOES NOT WORK ATM 11/20/2023
 
-    def is_point_in_annulus(center, point, outer_radius, inner_radius, shape):
-        center = np.array([int(shape[1] / 2), center])
-        distance = np.linalg.norm(np.array(point) - np.array(center))
-        #print(point, center, distance, inner_radius, outer_radius)
-        return inner_radius <= distance <= outer_radius
+    rows, cols = new_xs.shape[2], new_ys.shape[2]
+    xrange = (new_xs.min(), new_xs.max())
+    yrange = (new_ys.min(), new_ys.max())
+    # if not center:
+    #    center = (int(rows / 2), int(cols / 2))
 
-    def is_element_center_in_annulus(array, row, col, center,
-                                    inner_radius, outer_radius):
-        element_center = (row + 0.5, col + 0.5)  # Assuming array indices start from 0
+    for i in range(rows):
+        for j in range(cols):
+            x = (i / rows) * (xrange[1] - xrange[0]) + xrange[0] - center[0]
+            y = (j / cols) * (xrange[1] - xrange[0]) + xrange[0] - center[1] # images are square so use x in both cases
+            d = np.sqrt(x ** 2 + y ** 2)
+            if (r_le_in_f(x) < d) and (d < r_le_out_f(x)):
+                #print(z_f(x))
+                arr_2d[i, j] = 1 #z_f(x)
 
+    plot_2d_array(arr_2d)
 
-        return is_point_in_annulus(center, element_center,
-                                   inner_radius, outer_radius, array.shape)
-
-    mins = np.min((new_xs, new_ys))
-    maxs = np.max((new_xs, new_ys))
-    print(array_2d.shape)
-    for i in range(array_2d.shape[0]):
-       for j in range(array_2d.shape[1]):
-            x, y = (i / array_2d.shape[0]) * (maxs-mins) + mins, (j / array_2d.shape[1]) * (588*2) + mins
-            ## NEED TO REVISE ^^^
-            ##print(i, j, x, y, mins, maxs, inner_radius(x))
-            if is_element_center_in_annulus(array_2d, x, y, act,
-                                            inner_radius(x), outer_radius(x)):
-                array_2d[i, j] = 1
-                # this should calculate the surface brightness
-
-    plt.imshow(array_2d)
-    plt.show()
-    return array_2d
+    return arr_2d
 
 
 
@@ -334,16 +324,8 @@ def LE_xy_surface_concate_plane(alpha, z0ly, ct, x):
         # cossigma, surface = fb.brightness(x_inter, y_inter, z_inter, ct)
 
         phis, r_le_out, r_le_in, act = rinout_plane(y_inter, x_inter, ct, a, z0ly)
-        print(phis, r_le_out, r_le_in)
-        plt.plot(x_inter, r_le_in, '.')
-        plt.show()
-        print("x_inter", x_inter.shape, r_le_out.shape)
-        r_le_out_f = sp.interpolate.interp1d(x_inter, r_le_out, fill_value=(r_le_out[0], r_le_out[-1]))
-        r_le_in_f = sp.interpolate.interp1d(x_inter, r_le_in, fill_value=(r_le_in[0], r_le_in[-1]))
         new_xs, new_ys = final_xy_projected(phis, r_le_out, r_le_in, act)
 
-        #final_xy_projected_in_array(phis, r_le_out_f, r_le_in_f, act,
-        #                            np.zeros((100, 100)), new_xs, new_ys)
 
         return new_xs, new_ys, surface, act, ange, cossigma
 
@@ -359,8 +341,6 @@ def LE_xy_surface_concate_plane(alpha, z0ly, ct, x):
     else:
         new_xs, new_ys, surface, act, ange, cossigma = calculation(alpha, z0ly, ct, a, r_le2, r_le, x)
         return new_xs, new_ys, surface, act, ange, cossigma
-    
-
 
 
 def LE_xy_surface_concate_plane_fed(alpha, z0ly, ct, x):
@@ -370,59 +350,60 @@ def LE_xy_surface_concate_plane_fed(alpha, z0ly, ct, x):
     Arguments:
         x: initialize values for x, e.g: x = np.linspace(-10, 10, 1000) in ly
         z0ly: plane intersects the line of sight here in ly
-        a: inclination of the plane a = ctan(alpha)
+        a: inclination of the plane a = tan(alpha)
         ct: time where the LE is observed
 
     Return:
         new_xs, new_ys: in arcsec
-        surface: 
+        surface:
         act: in arc
         fin_delta: angle line of sight - dust
 
     """
     a = np.tan(np.deg2rad(alpha))
-    r_le2 = 2 * z0ly * ct + (ct)**2 * (1 + a**2)
+    r_le2 = 2 * z0ly * ct + (ct) ** 2 * (1 + a ** 2)
     r_le = np.sqrt(r_le2)
 
     def calculation(alpha, z0ly, ct, a, r_le2, r_le, x):
         a = np.tan(np.deg2rad(alpha))
 
         x_inter, y_inter, z_inter, ange = calc_intersection_xz_plane(x, z0ly, a, ct)
-        
+
         cossigma, surface = sb.surface_brightness(x_inter, y_inter, z_inter, ct)
         # cossigma, surface = fb.brightness(x_inter, y_inter, z_inter, ct)
 
         phis, r_le_out, r_le_in, act = rinout_plane(y_inter, x_inter, ct, a, z0ly)
+        new_xs, new_ys = final_xy_projected(phis, r_le_out, r_le_in, act)
 
-        new_xs, new_ys = final_xy_projected(phis, r_le_in, r_le_out, act)
+        r_le_out_f = sp.interpolate.interp1d(new_xs[0, 0], r_le_out, bounds_error=False)
+        r_le_in_f = sp.interpolate.interp1d(new_xs[0, 1], r_le_in, bounds_error=False)
+        z_f = sp.interpolate.interp1d(x_inter, z_inter, bounds_error=False)
 
-        arr2d = np.zeros((201, 201))
-        #arr2d = final_xy_projected_in_array(phis, r_le_out, r_le_in,
-        #                                    act, arr2d, new_xs, new_ys)
-
-        #import pylab as plt
-        #plt.imshow(arr2d)
+        # final_xy_projected_in_array(phis, r_le_out_f, r_le_in_f, act,
+        #                            np.zeros((100, 100)), new_xs, new_ys)
+        #plt.plot(new_xs[0, 1], r_le_in_f(new_xs[0, 1]), 'x')
+        #plt.plot(new_xs[0, 0], r_le_out_f(new_xs[0, 0]), 's')
         #plt.show()
+        print("x_inter", x_inter.shape, r_le_out.shape)
 
+        array_2d = np.zeros((new_xs.shape[2], new_ys.shape[2]))
 
-        #print("num surface: %s"%(surface.shape))
+        final_xy_projected_in_array(r_le_in_f, r_le_out_f, z_f,
+                                    array_2d, new_xs, new_ys)
 
         return new_xs, new_ys, surface, act, ange, cossigma
 
-
     if z0ly < 0:
-        ti = (-2 * z0ly)/(fc.c * (1 + a**2))
+        ti = (-2 * z0ly) / (fc.c * (1 + a ** 2))
         if ti >= ct:
             print("No LE")
-            return 0,0,0,0,0,0
+            return 0, 0, 0, 0, 0, 0
         else:
             new_xs, new_ys, surface, act, ange, cossigma = calculation(alpha, z0ly, ct, a, r_le2, r_le, x)
             return new_xs, new_ys, surface, act, ange, cossigma
     else:
         new_xs, new_ys, surface, act, ange, cossigma = calculation(alpha, z0ly, ct, a, r_le2, r_le, x)
         return new_xs, new_ys, surface, act, ange, cossigma
-    
-
 
 
 def LE_xy_surface_concate_sphere(r0ly, ct, x):
