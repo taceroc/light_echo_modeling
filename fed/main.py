@@ -55,7 +55,7 @@ for ct in [290]: #alpha = 0 done
     print("starting ct=%s days, ctyi=%.2f years, radius %.2f (units?)"%(ct, ctyi, r_le))
     xmin = -r_le-a*ctyi
     xmax = r_le-a*ctyi
-    x = np.linspace(xmin, xmax,10)
+    x = np.linspace(xmin, xmax, 100)
     new_xs_v838, new_ys_v838, surface_v838, act_v838, ange_v838, cossigma_v838 = le_geo.LE_xy_surface_concate_plane_fed(alpha, vc.z0ly, ctyi, x)
 
     path_ge = r"%s/save_data/"%(path_to_LE)

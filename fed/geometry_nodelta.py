@@ -233,8 +233,8 @@ def final_xy_projected(phis, r_le_out, r_le_in, act):
     return new_xs, new_ys
 
 
-def final_xy_projected_in_array(r_le_in_f, r_le_out_f, z_f,
-                             arr_2d, new_xs, new_ys, center=(0,0)):
+def final_xy_projected_in_array(r_le_in_f, r_le_out_f, xs, ys, zs,
+                             arr_2d, new_xs, new_ys, ct = 0, center=(0,0)):
 
     """
     Calculate the x,y points in arcseconds
@@ -251,19 +251,30 @@ def final_xy_projected_in_array(r_le_in_f, r_le_out_f, z_f,
     # DOES NOT WORK ATM 11/20/2023
 
     rows, cols = new_xs.shape[2], new_ys.shape[2]
-    xrange = (new_xs.min(), new_xs.max())
-    yrange = (new_ys.min(), new_ys.max())
+    xrange = (new_xs.min() - 10, new_xs.max() + 10)
+    yrange = (new_ys.min() - 10, new_ys.max() + 10)
+
     # if not center:
     #    center = (int(rows / 2), int(cols / 2))
+    from sklearn.neighbors import KNeighborsRegressor
+    knn = KNeighborsRegressor(n_neighbors=3)
+    #print('test')
+    knn.fit(np.array([xs, ys]).T, zs)
+    #print(knn.predict(np.array([xs[0], ys[0]]).T.reshape(1,2)))
 
     for i in range(rows):
         for j in range(cols):
             x = (i / rows) * (xrange[1] - xrange[0]) + xrange[0] - center[0]
-            y = (j / cols) * (xrange[1] - xrange[0]) + xrange[0] - center[1] # images are square so use x in both cases
-            d = np.sqrt(x ** 2 + y ** 2)
-            if (r_le_in_f(x) < d) and (d < r_le_out_f(x)):
-                #print(z_f(x))
-                arr_2d[i, j] = 1 #z_f(x)
+            if (x < r_le_out_f(x)): #to speed things up hopefully
+                y = (j / cols) * (xrange[1] - xrange[0]) + xrange[0] - center[1] # images are square so use x in both cases
+                if (y < r_le_out_f(x)):
+                    z = knn.predict(np.array([x, y]).T.reshape(1,2))
+
+                    d = np.sqrt(x ** 2 + y ** 2)
+                    if (r_le_in_f(x) < d) and (d < r_le_out_f(x)):
+                        surface_brightness = sb.surface_brightness(np.array([x]), np.array([y]), z, ct)
+                        #print(surface_brightness)
+                        arr_2d[j, i] = surface_brightness[1] #z_f(x)
 
     plot_2d_array(arr_2d)
 
@@ -377,7 +388,6 @@ def LE_xy_surface_concate_plane_fed(alpha, z0ly, ct, x):
 
         r_le_out_f = sp.interpolate.interp1d(new_xs[0, 0], r_le_out, bounds_error=False)
         r_le_in_f = sp.interpolate.interp1d(new_xs[0, 1], r_le_in, bounds_error=False)
-        z_f = sp.interpolate.interp1d(x_inter, z_inter, bounds_error=False)
 
         # final_xy_projected_in_array(phis, r_le_out_f, r_le_in_f, act,
         #                            np.zeros((100, 100)), new_xs, new_ys)
@@ -388,8 +398,9 @@ def LE_xy_surface_concate_plane_fed(alpha, z0ly, ct, x):
 
         array_2d = np.zeros((new_xs.shape[2], new_ys.shape[2]))
 
-        final_xy_projected_in_array(r_le_in_f, r_le_out_f, z_f,
-                                    array_2d, new_xs, new_ys)
+        final_xy_projected_in_array(r_le_in_f, r_le_out_f,
+                                    x_inter, y_inter, z_inter,
+                                    array_2d, new_xs, new_ys, ct=ct)
 
         return new_xs, new_ys, surface, act, ange, cossigma
 

@@ -25,12 +25,16 @@ import surface_brightness as sb
 
 plt.style.use('seaborn-v0_8-colorblind')
 
-
-def plot(new_xs, new_ys, surface, alpha, act, ax, fig, save = False, name = "name"):
-
-    surface_300_norm = ( surface.copy() - np.nanmin(surface.copy())  ) / (np.nanmax(surface.copy()) - np.nanmin(surface.copy()))
-    cmap = matplotlib.colormaps.get_cmap('magma_r')
+def setcolormap(surface, cmap = 'magma_r'):
+    surface_300_norm = (surface.copy() - np.nanmin(surface.copy())) / ( # FBB why a copy?
+                np.nanmax(surface.copy()) - np.nanmin(surface.copy()))
     normalize = matplotlib.colors.Normalize(vmin=np.nanmin(surface_300_norm), vmax=np.nanmax(surface_300_norm))
+
+    return surface_300_norm, normalize
+
+def plot(new_xs, new_ys, surface, alpha, act, ax, fig, save = False, name = "name", cmap="magma_r"):
+    cmap = matplotlib.colormaps.get_cmap(cmap)
+    surface_300_norm, normalize = setcolormap(surface)
 
     # ax.set_title("density define only for %s degrees and a = tan(%s)"%([deltass.min(), deltass.max()], alpha))
 
@@ -75,10 +79,8 @@ def plot(new_xs, new_ys, surface, alpha, act, ax, fig, save = False, name = "nam
 
 
 def plot_sphere(new_xs, new_ys, surface, ax, fig, save = False, name = "name"):
-
-    surface_300_norm = ( surface.copy() - np.nanmin(surface.copy())  ) / (np.nanmax(surface.copy()) - np.nanmin(surface.copy()))
-    cmap = matplotlib.colormaps.get_cmap('magma_r')
-    normalize = matplotlib.colors.Normalize(vmin=np.nanmin(surface_300_norm), vmax=np.nanmax(surface_300_norm))
+    cmap = matplotlib.colormaps.get_cmap(cmap)
+    surface_300_norm, normalize = setcolormap(surface)
 
     mins = np.min((new_xs, new_ys))
     maxs = np.max((new_xs, new_ys))
@@ -117,7 +119,24 @@ def plot_sphere(new_xs, new_ys, surface, ax, fig, save = False, name = "name"):
 
     return cb1, ax
 
-def plot_2d_array(arr_2d):
+def plot_2d_array(arr_2d, cmap='magma_r', center=None):
+    minmax = np.nanmin(arr_2d), np.nanmax(arr_2d)
+    fig, axes = plt.subplots(1, 1, figsize=(10, 8))
+    plt.imshow(arr_2d, cmap=cmap, clim=minmax)
+    if not center:
+        center = int(arr_2d.shape[0] / 2), int(arr_2d.shape[1] / 2)
+    axes.scatter(center[0], center[1], marker="*", color="crimson")
 
-    plt.imshow(arr_2d)
+    # cbax = fig.add_axes([0.96, 0.1, 0.03, 0.80])
+    cbax = fig.add_axes([0.8, 0.1, 0.03, 0.80])
+
+    axes.set_xlabel("arcsec")
+    axes.set_ylabel("arcsec")
+    axes.set_box_aspect(1)
+
+    # axes.set_title(r"V838 Mon - Plane: time$_{obs}$ = %s days, $\alpha$ = %s deg,  z0 = %s pc"%(vc.Deltat, al, vc.z0))
+    axes.set_title(r"V838 Mon - Plane: $\alpha$ = %s deg " % ("?"))
+    name = path_to_LE + r"/figures/" + r"plane_nd_v838_a%s_heatmap.pdf" % ("?")
+    plt.savefig(name, dpi=700)
+
     plt.show()
