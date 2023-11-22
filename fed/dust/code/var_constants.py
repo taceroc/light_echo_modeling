@@ -31,3 +31,6 @@ d = dkpc * 1000 * cf.pctoly
 L = 15e3
 L = (L * cf.lsuntol) * (cf.ytos ** 3) * (cf.pctoly ** 2) / (cf.pctom ** 2)
 m_peak = 6.75
+
+
+

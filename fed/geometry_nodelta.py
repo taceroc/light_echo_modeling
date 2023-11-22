@@ -1,15 +1,18 @@
 import numpy as np
+import scipy as sp
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+from plot_nodelta import plot_2d_array
+
 from astropy import units as u
 import astropy.cosmology.units as cu
 from astropy.cosmology import FlatLambdaCDM
 
-
 import sys
+from setpath import path_to_LE
 # sys.path.append('/content/drive/MyDrive/LE2023/dust/code')
-sys.path.append(r"path_to_LE/dust/code")
+sys.path.append(path_to_LE + r"/dust/code")
 
 import var_constants as vc
 import dust_constants as dc
@@ -18,7 +21,7 @@ import scattering_function as sf
 import size_dist as sd
 import calculate_scattering_function as csf
 
-sys.path.append(r"path_to_LE")
+sys.path.append(path_to_LE)
 import surface_brightness as sb
 # import brightness as fb
 
@@ -229,6 +232,56 @@ def final_xy_projected(phis, r_le_out, r_le_in, act):
 
     return new_xs, new_ys
 
+
+def final_xy_projected_in_array(r_le_in_f, r_le_out_f, xs, ys, zs,
+                             arr_2d, new_xs, new_ys, ct = 0, center=(0,0)):
+
+    """
+    Calculate the x,y points in arcseconds
+    Only valid when the dust and the paraboloid have a analytical expresion (and the analtyical expression is a circumference)
+
+    Arguments:
+        phis: angle in the sky plane
+        r_le_out, r_le_in: out and inner radii in arcsec
+        act: center of LE in arcsec
+
+    Returns:
+        new_xs, new_ys: x,y position in the x-y plane in arcseconds
+    """
+    # DOES NOT WORK ATM 11/20/2023
+
+    rows, cols = new_xs.shape[2], new_ys.shape[2]
+    xrange = (new_xs.min() - 10, new_xs.max() + 10)
+    yrange = (new_ys.min() - 10, new_ys.max() + 10)
+
+    # if not center:
+    #    center = (int(rows / 2), int(cols / 2))
+    from sklearn.neighbors import KNeighborsRegressor
+    knn = KNeighborsRegressor(n_neighbors=3)
+    #print('test')
+    knn.fit(np.array([xs, ys]).T, zs)
+    #print(knn.predict(np.array([xs[0], ys[0]]).T.reshape(1,2)))
+
+    for i in range(rows):
+        for j in range(cols):
+            x = (i / rows) * (xrange[1] - xrange[0]) + xrange[0] - center[0]
+            if (x < r_le_out_f(x)): #to speed things up hopefully
+                y = (j / cols) * (xrange[1] - xrange[0]) + xrange[0] - center[1] # images are square so use x in both cases
+                if (y < r_le_out_f(x)):
+                    z = knn.predict(np.array([x, y]).T.reshape(1,2))
+
+                    d = np.sqrt(x ** 2 + y ** 2)
+                    if (r_le_in_f(x) < d) and (d < r_le_out_f(x)):
+                        surface_brightness = sb.surface_brightness(np.array([x]), np.array([y]), z, ct)
+                        #print(surface_brightness)
+                        arr_2d[j, i] = surface_brightness[1] #z_f(x)
+
+    plot_2d_array(arr_2d)
+
+    return arr_2d
+
+
+
 def final_xy_projected_sphere(phis, r_le_out, r_le_in):
     """
     Calculate the x,y points in arcseconds
@@ -284,7 +337,6 @@ def LE_xy_surface_concate_plane(alpha, z0ly, ct, x):
         phis, r_le_out, r_le_in, act = rinout_plane(y_inter, x_inter, ct, a, z0ly)
         new_xs, new_ys = final_xy_projected(phis, r_le_out, r_le_in, act)
 
-        print("num surface: %s"%(surface.shape))
 
         return new_xs, new_ys, surface, act, ange, cossigma
 
@@ -300,7 +352,70 @@ def LE_xy_surface_concate_plane(alpha, z0ly, ct, x):
     else:
         new_xs, new_ys, surface, act, ange, cossigma = calculation(alpha, z0ly, ct, a, r_le2, r_le, x)
         return new_xs, new_ys, surface, act, ange, cossigma
-    
+
+
+def LE_xy_surface_concate_plane_fed(alpha, z0ly, ct, x):
+    """
+    Calculate the intersection points x,y,z between the plane and the paraboloid
+
+    Arguments:
+        x: initialize values for x, e.g: x = np.linspace(-10, 10, 1000) in ly
+        z0ly: plane intersects the line of sight here in ly
+        a: inclination of the plane a = tan(alpha)
+        ct: time where the LE is observed
+
+    Return:
+        new_xs, new_ys: in arcsec
+        surface:
+        act: in arc
+        fin_delta: angle line of sight - dust
+
+    """
+    a = np.tan(np.deg2rad(alpha))
+    r_le2 = 2 * z0ly * ct + (ct) ** 2 * (1 + a ** 2)
+    r_le = np.sqrt(r_le2)
+
+    def calculation(alpha, z0ly, ct, a, r_le2, r_le, x):
+        a = np.tan(np.deg2rad(alpha))
+
+        x_inter, y_inter, z_inter, ange = calc_intersection_xz_plane(x, z0ly, a, ct)
+
+        cossigma, surface = sb.surface_brightness(x_inter, y_inter, z_inter, ct)
+        # cossigma, surface = fb.brightness(x_inter, y_inter, z_inter, ct)
+
+        phis, r_le_out, r_le_in, act = rinout_plane(y_inter, x_inter, ct, a, z0ly)
+        new_xs, new_ys = final_xy_projected(phis, r_le_out, r_le_in, act)
+
+        r_le_out_f = sp.interpolate.interp1d(new_xs[0, 0], r_le_out, bounds_error=False)
+        r_le_in_f = sp.interpolate.interp1d(new_xs[0, 1], r_le_in, bounds_error=False)
+
+        # final_xy_projected_in_array(phis, r_le_out_f, r_le_in_f, act,
+        #                            np.zeros((100, 100)), new_xs, new_ys)
+        #plt.plot(new_xs[0, 1], r_le_in_f(new_xs[0, 1]), 'x')
+        #plt.plot(new_xs[0, 0], r_le_out_f(new_xs[0, 0]), 's')
+        #plt.show()
+        print("x_inter", x_inter.shape, r_le_out.shape)
+
+        array_2d = np.zeros((new_xs.shape[2], new_ys.shape[2]))
+
+        final_xy_projected_in_array(r_le_in_f, r_le_out_f,
+                                    x_inter, y_inter, z_inter,
+                                    array_2d, new_xs, new_ys, ct=ct)
+
+        return new_xs, new_ys, surface, act, ange, cossigma
+
+    if z0ly < 0:
+        ti = (-2 * z0ly) / (fc.c * (1 + a ** 2))
+        if ti >= ct:
+            print("No LE")
+            return 0, 0, 0, 0, 0, 0
+        else:
+            new_xs, new_ys, surface, act, ange, cossigma = calculation(alpha, z0ly, ct, a, r_le2, r_le, x)
+            return new_xs, new_ys, surface, act, ange, cossigma
+    else:
+        new_xs, new_ys, surface, act, ange, cossigma = calculation(alpha, z0ly, ct, a, r_le2, r_le, x)
+        return new_xs, new_ys, surface, act, ange, cossigma
+
 
 def LE_xy_surface_concate_sphere(r0ly, ct, x):
     """

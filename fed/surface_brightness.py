@@ -5,7 +5,9 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 import sys
-sys.path.append(r"path_to_LE/dust/code")
+
+from setpath import path_to_LE
+sys.path.append(path_to_LE + r"/dust/code")
 
 import var_constants as vc
 import dust_constants as dc
